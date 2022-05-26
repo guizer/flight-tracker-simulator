@@ -1,2 +1,4 @@
 data-retrieval/
 __pycache__/
+*.db
+*.db-journal
