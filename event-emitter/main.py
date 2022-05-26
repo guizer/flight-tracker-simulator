@@ -1,25 +1,18 @@
+import json
 import logging
 import time
-from enum import Enum
 
 import pandas as pd
+import pika
 
 import settings
+from event_type import EventType
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 logger = logging.getLogger()
 
-
-class EventType(Enum):
-    DEPARTURE = "DEPARTURE"
-    ARRIVAL = "ARRIVAL"
-    POSITION = "POSITION"
-
-
-def send_event(event):
-    # TODO: send the event to a message broker
-    pass
+CONNECTION_PARAMETERS = pika.ConnectionParameters(host=settings.RABBITMQ_URL, connection_attempts=5, retry_delay=5)
 
 
 def load_events():
@@ -56,30 +49,34 @@ def load_events():
 
 
 if __name__ == "__main__":
-    logger.info("Starting simulation")
-    events = load_events()
-    if events:
-        sent_events_counter = 0
-        initial_time = time.time()
-        time_interval_lower_bound = time.time()
-        initial_event_time = events[0]["time"]
-        while events:
-            time_interval_upper_bound = time.time()
-            if time_interval_upper_bound - time_interval_lower_bound >= 1. / settings.REFRESH_FREQUENCY_IN_HZ:
-                current_event = events[0]
-                while current_event and (current_event["time"] - initial_event_time) <= (
-                        time_interval_upper_bound - initial_time) * settings.SPEED_FACTOR:
-                    logger.info("Sending event %d: %s", sent_events_counter, current_event)
-                    send_event(current_event)
-                    sent_events_counter += 1
-                    if events:
-                        events.pop(0)
-                    if events:
-                        current_event = events[0]
-                    else:
-                        current_event = None
-                time_interval_lower_bound = time.time()
-        logger.info("%d events have been successfully processed.", sent_events_counter)
-    else:
-        logger.info("No event to process.")
-    logger.info("Simulation terminated.")
+    with pika.BlockingConnection(CONNECTION_PARAMETERS) as connection:
+        channel = connection.channel()
+        channel.queue_declare(queue=settings.FLIGHT_EVENTS_QUEUE_NAME)
+        events = load_events()
+        logger.info("Starting simulation")
+        if events:
+            sent_events_counter = 0
+            initial_time = time.time()
+            time_interval_lower_bound = time.time()
+            initial_event_time = events[0]["time"]
+            while events:
+                time_interval_upper_bound = time.time()
+                if time_interval_upper_bound - time_interval_lower_bound >= 1. / settings.REFRESH_FREQUENCY_IN_HZ:
+                    current_event = events[0]
+                    while current_event and (current_event["time"] - initial_event_time) <= (
+                            time_interval_upper_bound - initial_time) * settings.SPEED_FACTOR:
+                        logger.info("Sending event %d: %s", sent_events_counter, current_event)
+                        channel.basic_publish(exchange="", routing_key=settings.FLIGHT_EVENTS_QUEUE_NAME,
+                                              body=json.dumps(current_event).encode(settings.ENCODING))
+                        sent_events_counter += 1
+                        if events:
+                            events.pop(0)
+                        if events:
+                            current_event = events[0]
+                        else:
+                            current_event = None
+                    time_interval_lower_bound = time.time()
+            logger.info("%d events have been successfully processed.", sent_events_counter)
+        else:
+            logger.info("No event to process.")
+        logger.info("Simulation terminated.")

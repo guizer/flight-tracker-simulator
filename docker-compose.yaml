@@ -1,0 +1,27 @@
+version: "3.3"
+services:
+  event-emitter:
+    build:
+      context: .
+      dockerfile: ./event-emitter/Dockerfile
+    depends_on:
+      - "rabbitmq"
+    entrypoint: "python main.py"
+    environment:
+      RABBITMQ_URL: "rabbitmq"
+      SPEED_FACTOR: "100"
+    networks:
+      - default
+    stdin_open: true
+    tty: true
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: rabbitmq
+    networks:
+      - default
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+networks:
+  default:

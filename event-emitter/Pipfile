@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 pandas = "==1.4"
+pika = "==1.2"
 
 [dev-packages]
 
