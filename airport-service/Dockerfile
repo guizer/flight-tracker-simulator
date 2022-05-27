@@ -1,9 +1,11 @@
 FROM python:3.9-slim
 
-ADD . /app/
+ADD . /flight-events-simulator/
 
-WORKDIR /app/airport-service
+WORKDIR /flight-events-simulator/airport-service
 
 RUN pip install pipenv && pipenv sync --system
+
+ENV PYTHONPATH=/flight-events-simulator/airport-service
 
 ENTRYPOINT ["sh", "-c", "bash"]

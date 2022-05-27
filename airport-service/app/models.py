@@ -1,6 +1,6 @@
 from sqlalchemy import Column, FLOAT, Integer, String
 
-from database import Base
+from app.database import Base
 
 
 class Airport(Base):

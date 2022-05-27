@@ -12,19 +12,15 @@ services:
       SPEED_FACTOR: "100"
     networks:
       - default
-    stdin_open: true
-    tty: true
   airport-service:
     build:
       context: .
       dockerfile: ./airport-service/Dockerfile
-    entrypoint: "uvicorn main:app --host 0.0.0.0"
+    entrypoint: bash -c "python app/init_database.py && uvicorn app.main:app --host 0.0.0.0"
     networks:
       - default
     ports:
       - "8000:8000"
-    stdin_open: true
-    tty: true
   rabbitmq:
     image: rabbitmq:3-management
     hostname: rabbitmq
