@@ -3,9 +3,8 @@ import json
 import logging
 
 import uvicorn
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
 from sse_starlette import EventSourceResponse
 from starlette.requests import Request
 
@@ -35,7 +34,7 @@ async def startup_event():
 
 
 @app.get("/stream")
-async def position_stream(request: Request, session: Session = Depends(get_session)):
+async def position_stream(request: Request):
     async def event_publisher():
         last_position = None
         try:
@@ -44,12 +43,13 @@ async def position_stream(request: Request, session: Session = Depends(get_sessi
                 if disconnected:
                     logger.info(f"Disconnecting client {request.client}")
                     break
+                session = SessionLocal()
                 positions = crud.find_all_positions_more_recent_than(session, last_position.time) \
                     if last_position else crud.find_all_positions(session)
                 if positions:
                     last_position = positions[-1]
                     yield json.dumps(jsonable_encoder(positions))
-
+                session.close()
                 await asyncio.sleep(settings.STREAM_DELAY_IN_SECS)
         except asyncio.CancelledError as error:
             logger.info(f"Disconnected from client (via refresh/close) {request.client}")
