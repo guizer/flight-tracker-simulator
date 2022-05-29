@@ -13,3 +13,5 @@ RABBITMQ_URL = os.getenv("RABBITMQ_URL", "localhost")
 FLIGHT_EVENTS_QUEUE_NAME = "flight-events"
 
 ENCODING = "utf-8"
+
+LOGGING_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

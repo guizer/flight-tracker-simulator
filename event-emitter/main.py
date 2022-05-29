@@ -8,7 +8,7 @@ import pika
 import settings
 from event_type import EventType
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format=settings.LOGGING_FORMAT, level=logging.INFO)
 
 logger = logging.getLogger()
 
@@ -23,23 +23,19 @@ def load_events():
     departure_events = flights.copy()
     departure_events["time"] = departure_events["actual_time_of_departure"]
     departure_events["type"] = EventType.DEPARTURE.value
-    departure_events["parameters"] = departure_events["flight_id"].map(lambda flight_id: {flight_id: flight_id})
-    departure_events = departure_events[["time", "type", "parameters"]]
+    departure_events = departure_events[["time", "type", "flight_id"]]
 
     arrival_events = flights.copy()
     arrival_events["time"] = arrival_events["actual_time_of_arrival"]
     arrival_events["type"] = EventType.ARRIVAL.value
-    arrival_events["parameters"] = arrival_events["flight_id"].map(lambda flight_id: {flight_id: flight_id})
-    arrival_events = arrival_events[["time", "type", "parameters"]]
+    arrival_events = arrival_events[["time", "type", "flight_id"]]
 
     logger.info("Retrieving position events from file %s", settings.INPUT_EVENTS_FILE)
     position_events = pd.read_csv(settings.INPUT_EVENTS_FILE)
     position_events.merge(flights[["flight_id"]], on="flight_id", how="inner")
     position_events["type"] = EventType.POSITION.value
-    position_events["parameters"] = position_events[["flight_id", "latitude", "longitude", "altitude",
-                                                     "speed", "heading"]] \
-        .to_dict('records')
-    position_events = position_events[["time", "type", "parameters"]]
+    position_events = position_events[["time",  "type", "flight_id", "latitude", "longitude", "altitude",
+                                                     "speed", "heading"]]
     logger.info("%d position events to process", len(position_events))
 
     loaded_events = pd.concat([departure_events, arrival_events, position_events], axis=0).sort_values(
@@ -49,12 +45,12 @@ def load_events():
 
 
 if __name__ == "__main__":
-    with pika.BlockingConnection(CONNECTION_PARAMETERS) as connection:
-        channel = connection.channel()
-        channel.queue_declare(queue=settings.FLIGHT_EVENTS_QUEUE_NAME)
-        events = load_events()
-        logger.info("Starting simulation")
-        if events:
+    events = load_events()
+    if events:
+        with pika.BlockingConnection(CONNECTION_PARAMETERS) as connection:
+            channel = connection.channel()
+            channel.queue_declare(queue=settings.FLIGHT_EVENTS_QUEUE_NAME, auto_delete=True)
+            logger.info("Starting simulation")
             sent_events_counter = 0
             initial_time = time.time()
             time_interval_lower_bound = time.time()
@@ -77,6 +73,6 @@ if __name__ == "__main__":
                             current_event = None
                     time_interval_lower_bound = time.time()
             logger.info("%d events have been successfully processed.", sent_events_counter)
-        else:
-            logger.info("No event to process.")
-        logger.info("Simulation terminated.")
+    else:
+        logger.info("No event to process.")
+    logger.info("Simulation terminated.")

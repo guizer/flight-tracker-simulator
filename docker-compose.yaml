@@ -6,21 +6,34 @@ services:
       dockerfile: ./event-emitter/Dockerfile
     depends_on:
       - "rabbitmq"
-    entrypoint: "python main.py"
+    entrypoint: bash -c "sleep 10 && python main.py"
     environment:
       RABBITMQ_URL: "rabbitmq"
-      SPEED_FACTOR: "100"
+      SPEED_FACTOR: "10"
     networks:
       - default
   airport-service:
     build:
       context: .
       dockerfile: ./airport-service/Dockerfile
-    entrypoint: bash -c "python app/init_database.py && uvicorn app.main:app --host 0.0.0.0"
+    entrypoint: bash -c "sleep 20 && python app/init_database.py && uvicorn app.main:app --host 0.0.0.0"
     networks:
       - default
     ports:
       - "8000:8000"
+  flight-position-service:
+    build:
+      context: .
+      dockerfile: ./flight-position-service/Dockerfile
+    depends_on:
+      - "rabbitmq"
+    entrypoint: bash -c "sleep 20 && uvicorn app.main:app --host 0.0.0.0 --port 8001"
+    environment:
+      RABBITMQ_URL: "rabbitmq"
+    networks:
+      - default
+    ports:
+      - "8001:8001"
   rabbitmq:
     image: rabbitmq:3-management
     hostname: rabbitmq
