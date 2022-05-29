@@ -8,6 +8,7 @@ pandas = "==1.4"
 pika = "==1.2"
 
 [dev-packages]
+pytest = "==7.1"
 
 [requires]
 python_version = "3.9"
