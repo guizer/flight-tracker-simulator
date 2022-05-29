@@ -2,7 +2,7 @@ FROM python:3.9-slim
 
 ADD . /app/
 
-WORKDIR /app/event-emitter
+WORKDIR /app/event-producer
 
 RUN pip install pipenv && pipenv sync --system
 

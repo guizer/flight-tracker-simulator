@@ -1,9 +1,9 @@
 version: "3.3"
 services:
-  event-emitter:
+  event-producer:
     build:
       context: .
-      dockerfile: ./event-emitter/Dockerfile
+      dockerfile: event-producer/Dockerfile
     depends_on:
       - "rabbitmq"
     entrypoint: bash -c "sleep 10 && python main.py"
@@ -21,10 +21,10 @@ services:
       - default
     ports:
       - "8000:8000"
-  flight-position-service:
+  flight-status-service:
     build:
       context: .
-      dockerfile: ./flight-position-service/Dockerfile
+      dockerfile: flight-status-service/Dockerfile
     depends_on:
       - "rabbitmq"
     entrypoint: bash -c "sleep 20 && uvicorn app.main:app --host 0.0.0.0 --port 8001"

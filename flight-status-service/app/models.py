@@ -3,8 +3,8 @@ from sqlalchemy import Column, FLOAT, TIMESTAMP, String
 from app.database import Base
 
 
-class FlightPosition(Base):
-    __tablename__ = "flight_positions"
+class FlightStatus(Base):
+    __tablename__ = "flight_status"
 
     flight_id = Column(String, primary_key=True, index=True)
     time = Column(TIMESTAMP, nullable=False)
@@ -13,4 +13,3 @@ class FlightPosition(Base):
     altitude = Column(FLOAT, nullable=False)
     speed = Column(FLOAT, nullable=False)
     heading = Column(FLOAT, nullable=False)
-

@@ -34,21 +34,21 @@ async def startup_event():
 
 
 @app.get("/stream")
-async def position_stream(request: Request):
+async def status_stream(request: Request):
     async def event_publisher():
-        last_position = None
         try:
+            last_status = None
             while True:
                 disconnected = await request.is_disconnected()
                 if disconnected:
                     logger.info(f"Disconnecting client {request.client}")
                     break
                 session = SessionLocal()
-                positions = crud.find_all_positions_more_recent_than(session, last_position.time) \
-                    if last_position else crud.find_all_positions(session)
-                if positions:
-                    last_position = positions[-1]
-                    yield json.dumps(jsonable_encoder(positions))
+                all_status = crud.find_all_status_more_recent_than(session, last_status.time) \
+                    if last_status else crud.find_all_status(session)
+                if all_status:
+                    last_status = all_status[-1]
+                    yield json.dumps(jsonable_encoder(all_status))
                 session.close()
                 await asyncio.sleep(settings.STREAM_DELAY_IN_SECS)
         except asyncio.CancelledError as error:

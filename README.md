@@ -3,13 +3,15 @@ Simulation of a service receiving real time flight position events and dispatchi
 
 ## How it works
 
-- Flight position events are generated and published to a RabbitMQ instance by the event emitter service. :heavy_check_mark:
+- Flight position events are generated and published to a RabbitMQ instance by the event producer service. :heavy_check_mark:
 
-- Those position events are consumed by the flight position service which:
-  1. Update the current position of the associated flight in its internal database. :heavy_check_mark:
-  2. Historize the position of the associated flight in its internal database. :x:
-  3. Expose the positions and their updates in near real-time with server-sent events. :heavy_check_mark:
-  4. Expose the past positions of the flights in REST. :x:
+- Those position events are consumed by
+  - The flight status service which
+    1. Update the current position of the associated flight in its internal database. :heavy_check_mark:
+    1. Expose the position and their updates in near real-time with server-sent events. :heavy_check_mark:
+  - The flight position history service
+    1. Historize the position of the associated flight in its internal database. :x:
+    2. Expose the past positions of the flights in REST. :x:
 
 - Airport data (names and coordinates) are exposed with a REST api by the airport service. :heavy_check_mark:
 

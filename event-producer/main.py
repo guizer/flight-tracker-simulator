@@ -34,8 +34,8 @@ def load_events():
     position_events = pd.read_csv(settings.INPUT_EVENTS_FILE)
     position_events.merge(flights[["flight_id"]], on="flight_id", how="inner")
     position_events["type"] = EventType.POSITION.value
-    position_events = position_events[["time",  "type", "flight_id", "latitude", "longitude", "altitude",
-                                                     "speed", "heading"]]
+    position_events = position_events[["time", "type", "flight_id", "latitude", "longitude", "altitude",
+                                       "speed", "heading"]]
     logger.info("%d position events to process", len(position_events))
 
     loaded_events = pd.concat([departure_events, arrival_events, position_events], axis=0).sort_values(
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     if events:
         with pika.BlockingConnection(CONNECTION_PARAMETERS) as connection:
             channel = connection.channel()
-            channel.queue_declare(queue=settings.FLIGHT_EVENTS_QUEUE_NAME, auto_delete=True)
+            channel.queue_declare(queue=settings.FLIGHT_EVENTS_QUEUE_NAME, auto_delete=True, durable=True)
             logger.info("Starting simulation")
             sent_events_counter = 0
             initial_time = time.time()
@@ -62,8 +62,12 @@ if __name__ == "__main__":
                     while current_event and (current_event["time"] - initial_event_time) <= (
                             time_interval_upper_bound - initial_time) * settings.SPEED_FACTOR:
                         logger.info("Sending event %d: %s", sent_events_counter, current_event)
-                        channel.basic_publish(exchange="", routing_key=settings.FLIGHT_EVENTS_QUEUE_NAME,
-                                              body=json.dumps(current_event).encode(settings.ENCODING))
+                        channel.basic_publish(exchange="",
+                                              routing_key=settings.FLIGHT_EVENTS_QUEUE_NAME,
+                                              body=json.dumps(current_event).encode(settings.ENCODING),
+                                              properties=pika.BasicProperties(
+                                                  delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
+                                              ))
                         sent_events_counter += 1
                         if events:
                             events.pop(0)
