@@ -25,9 +25,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pipenv
-        pipenv sync --dev
+        pipenv install --deploy --dev
       working-directory: airport-service
     - name: Test with pytest
       run: |
-        pytest
+        pipenv run pytest
       working-directory: airport-service
