@@ -15,6 +15,8 @@ Simulation of a service receiving real time flight position events and dispatchi
 
 - Airport data (names and coordinates) are exposed with a REST api by the airport service. :heavy_check_mark:
 
+- Flight data (arrival, destination, aircraft...) are exposed with a REST api by the flight service. :x:
+
 - A UI allows the visualization
   - of the current position of each aircraft on a map. :x:
   - of the past position of each aircraft on a map. :x:
