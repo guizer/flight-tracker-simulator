@@ -1,11 +1,12 @@
-FROM python:3.9-slim
+FROM python:3.9-slim-bullseye
 
-ADD . /flight-events-simulator/
+ADD data /data
+ADD airport-service /airport-service
 
-WORKDIR /flight-events-simulator/airport-service
+WORKDIR /airport-service
 
 RUN pip install pipenv && pipenv sync --system
 
-ENV PYTHONPATH=/flight-events-simulator/airport-service
+ENV PYTHONPATH=/airport-service
 
 ENTRYPOINT ["sh", "-c", "bash"]

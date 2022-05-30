@@ -6,7 +6,7 @@ services:
       dockerfile: event-producer/Dockerfile
     depends_on:
       - "rabbitmq"
-    entrypoint: bash -c "sleep 10 && python main.py"
+    entrypoint: bash -c "sleep 20 && python app/main.py"
     environment:
       RABBITMQ_URL: "rabbitmq"
       SPEED_FACTOR: "10"
@@ -42,6 +42,14 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+  ui:
+    build:
+      context: .
+      dockerfile: ui/Dockerfile
+    networks:
+      - default
+    ports:
+      - "3000:3000"
 
 networks:
   default:

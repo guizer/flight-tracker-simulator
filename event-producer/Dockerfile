@@ -1,9 +1,12 @@
-FROM python:3.9-slim
+FROM python:3.9-slim-bullseye
 
-ADD . /app/
+ADD data /data
+ADD event-producer /event-producer
 
-WORKDIR /app/event-producer
+WORKDIR /event-producer
 
 RUN pip install pipenv && pipenv sync --system
+
+ENV PYTHONPATH=/event-producer
 
 ENTRYPOINT ["sh", "-c", "bash"]

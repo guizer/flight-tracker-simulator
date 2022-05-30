@@ -37,5 +37,5 @@ docker compose up
 
 Flight position events are streamed at the endpoint http://localhost:8001/stream. One can retrieve them with a compatible http client e.g.
 ```bash
-curl -N --http2 -H "Accept:text/event-stream" http://localhost:8001/stream
+curl -N http://localhost:8001/stream
 ```
