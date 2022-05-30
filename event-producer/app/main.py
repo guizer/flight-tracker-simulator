@@ -47,7 +47,6 @@ def load_events():
 
 def process_events(events: List[dict]):
     logger.info("Start processing events.")
-    print(events[:5])
     if events:
         with pika.BlockingConnection(CONNECTION_PARAMETERS) as connection:
             channel = connection.channel()
