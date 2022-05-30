@@ -3,3 +3,4 @@ data-retrieval/
 __pycache__/
 *.db
 *.db-journal
+.pytest_cache/
