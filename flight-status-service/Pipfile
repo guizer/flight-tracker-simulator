@@ -12,3 +12,7 @@ sse-starlette = "==0.10"
 
 [requires]
 python_version = "3.9"
+
+[dev-packages]
+pytest = "==7.1"
+requests = "==2.27"

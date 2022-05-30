@@ -1,8 +1,8 @@
 import os
 
-INPUT_EVENTS_FILE = os.getenv("INPUT_EVENTS_FILE", "../data/flight_details.csv.gz")
+INPUT_EVENTS_FILE = os.getenv("INPUT_EVENTS_FILE", "../../data/flight_details.csv.gz")
 
-INPUT_FLIGHT_FILE = os.getenv("INPUT_FLIGHT_FILE", "../data/flights.csv.gz")
+INPUT_FLIGHT_FILE = os.getenv("INPUT_FLIGHT_FILE", "../../data/flights.csv.gz")
 
 REFRESH_FREQUENCY_IN_HZ = float(os.getenv("REFRESH_FREQUENCY_IN_HZ", 1))
 

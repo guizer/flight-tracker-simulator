@@ -1,12 +1,13 @@
 import json
 import logging
 import time
+from typing import List
 
 import pandas as pd
 import pika
 
-import settings
-from event_type import EventType
+from app import settings
+from app.event_type import EventType
 
 logging.basicConfig(format=settings.LOGGING_FORMAT, level=logging.INFO)
 
@@ -44,8 +45,8 @@ def load_events():
     return loaded_events
 
 
-if __name__ == "__main__":
-    events = load_events()
+def process_events(events: List[dict]):
+    logger.info("Start processing events.")
     if events:
         with pika.BlockingConnection(CONNECTION_PARAMETERS) as connection:
             channel = connection.channel()
@@ -80,3 +81,7 @@ if __name__ == "__main__":
     else:
         logger.info("No event to process.")
     logger.info("Simulation terminated.")
+
+
+if __name__ == "__main__":
+    process_events(load_events())
