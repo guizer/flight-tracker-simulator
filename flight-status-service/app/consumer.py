@@ -26,7 +26,7 @@ async def consume_flight_event_messages() -> None:
                         position: FlightPositionDto = FlightPositionDto(**json_message)
                         logger.info(
                             f"The following position has been received and will be saved in the database {position}")
-                        db_status = crud.find_status(session, position.flight_id)
+                        db_status = crud.find_status_by_id(session, position.flight_id)
                         if db_status is None:
                             db_status = models.FlightStatus(**position.dict())
                             session.add(db_status)

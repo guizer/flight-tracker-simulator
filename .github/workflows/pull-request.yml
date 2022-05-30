@@ -47,3 +47,23 @@ jobs:
       run: |
         pipenv run pytest -v
       working-directory: airport-service
+
+  build-flight-status-service:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.9"
+    - name: Install dependencies with pipenv
+      run: |
+        python -m pip install --upgrade pip pipenv
+        pipenv install --deploy --dev
+      working-directory: flight-status-service
+    - name: Test with pytest
+      run: |
+        pipenv run pytest -v
+      working-directory: flight-status-service
