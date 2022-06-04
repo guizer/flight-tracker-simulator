@@ -15,14 +15,9 @@ logging.basicConfig(format=settings.LOGGING_FORMAT, level=logging.INFO)
 models.Base.metadata.create_all(bind=engine, checkfirst=True)
 
 app = FastAPI()
-
-origins = [
-    "http://localhost:3000",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
