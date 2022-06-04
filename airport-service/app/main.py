@@ -3,6 +3,7 @@ from typing import List
 
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from app import error_messages, models, crud, settings
@@ -12,7 +13,15 @@ from app.dtos import AirportDto
 logging.basicConfig(format=settings.LOGGING_FORMAT, level=logging.INFO)
 
 models.Base.metadata.create_all(bind=engine, checkfirst=True)
+
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def get_session():

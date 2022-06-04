@@ -6,7 +6,7 @@ from aio_pika.abc import AbstractChannel, AbstractQueue
 
 from app import settings, models, crud
 from app.database import SessionLocal
-from app.dtos import FlightEventType, FlightPositionDto
+from app.dtos import FlightEventType, FlightStatusDto
 
 logger = logging.getLogger()
 
@@ -21,19 +21,22 @@ async def consume_flight_event_messages() -> None:
             async for incoming_message in queue_iter:
                 async with incoming_message.process():
                     json_message = json.loads(incoming_message.body)
-                    if json_message["type"] == FlightEventType.POSITION.value:
-                        session = SessionLocal()
-                        position: FlightPositionDto = FlightPositionDto(**json_message)
-                        logger.info(
-                            f"The following position has been received and will be saved in the database {position}")
-                        db_status = crud.find_status_by_id(session, position.flight_id)
-                        if db_status is None:
-                            db_status = models.FlightStatus(**position.dict())
-                            session.add(db_status)
-                        else:
-                            for key, value in position.dict().items():
+                    session = SessionLocal()
+                    alive = json_message["type"] == FlightEventType.POSITION.value
+                    status: FlightStatusDto = FlightStatusDto(**json_message, alive=alive)
+                    logger.debug(
+                        f"The following status has been received and will be saved in the database {status}")
+                    db_status = crud.find_status_by_id(session, status.flight_id)
+                    if db_status is None and alive is True:
+                        db_status = models.FlightStatus(**status.dict())
+                        session.add(db_status)
+                        setattr(db_status, "alive", alive)
+                    elif db_status is not None:
+                        for key, value in status.dict().items():
+                            if value is not None:
                                 setattr(db_status, key, value)
-                        session.commit()
-                        session.close()
+                        setattr(db_status, "alive", alive)
+                    session.commit()
+                    session.close()
                     if queue.name in incoming_message.body.decode():
                         break

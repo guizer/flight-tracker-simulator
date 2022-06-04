@@ -9,7 +9,7 @@ services:
     entrypoint: bash -c "sleep 20 && python app/main.py"
     environment:
       RABBITMQ_URL: "rabbitmq"
-      SPEED_FACTOR: "10"
+      SPEED_FACTOR: "100"
     networks:
       - default
   airport-service:

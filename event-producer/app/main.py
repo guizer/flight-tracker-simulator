@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import time
 from typing import List
 
@@ -17,32 +18,24 @@ CONNECTION_PARAMETERS = pika.ConnectionParameters(host=settings.RABBITMQ_URL, co
 
 
 def load_events():
-    logger.info("Retrieving flights from file %s", settings.INPUT_FLIGHT_FILE)
-    flights = pd.read_csv(settings.INPUT_FLIGHT_FILE).sort_values(["actual_time_of_departure"]).dropna()
-    logger.info("%d flights to process", len(flights))
-
-    departure_events = flights.copy()
-    departure_events["time"] = departure_events["actual_time_of_departure"]
-    departure_events["type"] = EventType.DEPARTURE.value
-    departure_events = departure_events[["time", "type", "flight_id"]]
-
-    arrival_events = flights.copy()
-    arrival_events["time"] = arrival_events["actual_time_of_arrival"]
-    arrival_events["type"] = EventType.ARRIVAL.value
-    arrival_events = arrival_events[["time", "type", "flight_id"]]
-
     logger.info("Retrieving position events from file %s", settings.INPUT_EVENTS_FILE)
     position_events = pd.read_csv(settings.INPUT_EVENTS_FILE)
-    position_events.merge(flights[["flight_id"]], on="flight_id", how="inner")
     position_events["type"] = EventType.POSITION.value
     position_events = position_events[["time", "type", "flight_id", "latitude", "longitude", "altitude",
                                        "speed", "heading"]]
+    position_events["time"] = position_events['time'].astype(int)
     logger.info("%d position events to process", len(position_events))
 
-    loaded_events = pd.concat([departure_events, arrival_events, position_events], axis=0).sort_values(
-        ["time"]).to_dict('records')
-    logger.info("%d events to process", len(loaded_events))
-    return loaded_events
+    arrival_events = position_events[["flight_id", "time"]] \
+        .sort_values(["time"], ascending=False) \
+        .drop_duplicates(["flight_id"])
+    arrival_events["type"] = EventType.ARRIVAL.value
+
+    all_events = pd.concat([position_events, arrival_events], axis=0) \
+        .sort_values(["time"]) \
+        .to_dict('records')
+    logger.info("%d events to process", len(all_events))
+    return all_events
 
 
 def process_events(events: List[dict]):
@@ -62,10 +55,15 @@ def process_events(events: List[dict]):
                     current_event = events[0]
                     while current_event and (current_event["time"] - initial_event_time) <= (
                             time_interval_upper_bound - initial_time) * settings.SPEED_FACTOR:
-                        logger.info("Sending event %d: %s", sent_events_counter, current_event)
+                        body = current_event
+                        if current_event["type"] == EventType.ARRIVAL.value:
+                            body = {key: value for key, value in current_event.items() if
+                                    type(value) is not float or not math.isnan(value)}
+                        logger.info("Sending event %d: %s", sent_events_counter, body)
+                        body = json.dumps(body).encode(settings.ENCODING)
                         channel.basic_publish(exchange="",
                                               routing_key=settings.FLIGHT_EVENTS_QUEUE_NAME,
-                                              body=json.dumps(current_event).encode(settings.ENCODING),
+                                              body=body,
                                               properties=pika.BasicProperties(
                                                   delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
                                               ))
