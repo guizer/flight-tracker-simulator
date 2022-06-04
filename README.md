@@ -18,7 +18,7 @@ Simulation of a service receiving real time flight position events and dispatchi
 - Flight data (departure, arrival, aircraft...) are exposed with a REST api by the flight service. :x:
 
 - A UI allows the visualization
-  - of the current position of each aircraft on a map. :x:
+  - of the current position of each aircraft on a map. :heavy_check_mark:
   - of the past position of each aircraft on a map. :x:
 
 
@@ -35,7 +35,4 @@ Run the simulation by running
 docker compose up
 ```
 
-Flight position events are streamed at the endpoint http://localhost:8001/stream. One can retrieve them with a compatible http client e.g.
-```bash
-curl -N http://localhost:8001/stream
-```
+The UI of the simulation is available at `http://localhost:3000`.

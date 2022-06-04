@@ -1,4 +1,4 @@
-from sqlalchemy import Column, FLOAT, TIMESTAMP, String
+from sqlalchemy import Column, FLOAT, TIMESTAMP, String, BOOLEAN
 
 from app.database import Base
 
@@ -13,3 +13,4 @@ class FlightStatus(Base):
     altitude = Column(FLOAT, nullable=False)
     speed = Column(FLOAT, nullable=False)
     heading = Column(FLOAT, nullable=False)
+    alive = Column(BOOLEAN, nullable=False)

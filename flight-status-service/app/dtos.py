@@ -1,23 +1,25 @@
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class FlightPositionDto(BaseModel):
-    flight_id: str
+class FlightStatusDto(BaseModel):
+    flight_id: str = Field(type=str, alias='flightId')
     time: datetime
-    latitude: float
-    longitude: float
-    altitude: float
-    speed: float
-    heading: float
+    latitude: Optional[float]
+    longitude: Optional[float]
+    altitude: Optional[float]
+    speed: Optional[float]
+    heading: Optional[float]
+    alive: bool
 
     class Config:
         orm_mode = True
+        allow_population_by_field_name = True
 
 
 class FlightEventType(Enum):
-    DEPARTURE = "DEPARTURE"
     ARRIVAL = "ARRIVAL"
     POSITION = "POSITION"
