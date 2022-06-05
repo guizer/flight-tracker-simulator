@@ -31,8 +31,11 @@ def load_events():
         .drop_duplicates(["flight_id"])
     arrival_events["type"] = EventType.ARRIVAL.value
 
-    all_events = pd.concat([position_events, arrival_events], axis=0) \
-        .sort_values(["time"]) \
+    all_events = pd.concat([position_events, arrival_events], axis=0)
+    all_events = all_events[
+        (all_events["time"] >= settings.START_TIMESTAMP) & (all_events["time"] <= settings.END_TIMESTAMP)]
+
+    all_events = all_events.sort_values(["time"]) \
         .to_dict('records')
     logger.info("%d events to process", len(all_events))
     return all_events
