@@ -1,7 +1,9 @@
 # flight-tracker-simulator
 Simulation of a flight tracking system consuming real time flight position events, handling aeronautical data in micro-services and displaying those data on a map.
 
-## How it works
+## About the project
+
+### How it works
 
 - Flight position events are generated and published to a RabbitMQ instance by the event producer service.
 - Those position events are consumed by
@@ -20,6 +22,12 @@ Simulation of a flight tracking system consuming real time flight position event
   - of the current position of each aircraft on a map.
   - of the past position of each aircraft on a map.
 
+### Built with
+
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [RabbitMQ](https://www.rabbitmq.com/)
+- [Next.js](https://nextjs.org/)
+- [Leaflet](https://leafletjs.com/)
 
 
 ## Prerequisites
