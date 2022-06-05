@@ -23,5 +23,6 @@ body {
   top: 20px;
   z-index: 1000000;
   font-weight: bold;
-  text-shadow: -2px 2px darkgray;
+  text-shadow: -1px 1px black;
+  color: white;
 }

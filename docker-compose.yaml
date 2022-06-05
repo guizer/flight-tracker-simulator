@@ -6,19 +6,19 @@ services:
       dockerfile: event-producer/Dockerfile
     depends_on:
       - "rabbitmq"
-    entrypoint: bash -c "sleep 20 && python app/main.py"
+    entrypoint: bash -c "sleep 50 && python app/main.py"
     environment:
       RABBITMQ_URL: "rabbitmq"
       SPEED_FACTOR: "10"
-      START_DATE: "2022-06-04 10:00:00"
-      END_DATE: "2022-06-04 17:00:00"
+      START_DATE: "2022-06-04 16:00:00"
+      END_DATE: "2022-06-04 22:00:00"
     networks:
       - default
   airport-service:
     build:
       context: .
       dockerfile: ./airport-service/Dockerfile
-    entrypoint: bash -c "sleep 20 && python app/init_database.py && uvicorn app.main:app --host 0.0.0.0"
+    entrypoint: bash -c "sleep 50 && python app/init_database.py && uvicorn app.main:app --host 0.0.0.0"
     networks:
       - default
     ports:
@@ -29,7 +29,7 @@ services:
       dockerfile: flight-status-service/Dockerfile
     depends_on:
       - "rabbitmq"
-    entrypoint: bash -c "sleep 20 && uvicorn app.main:app --host 0.0.0.0 --port 8001"
+    entrypoint: bash -c "sleep 50 && uvicorn app.main:app --host 0.0.0.0 --port 8001"
     environment:
       RABBITMQ_URL: "rabbitmq"
     networks:
@@ -40,7 +40,7 @@ services:
     build:
       context: .
       dockerfile: ./flight-service/Dockerfile
-    entrypoint: bash -c "sleep 20 && python app/init_database.py && uvicorn app.main:app --host 0.0.0.0 --port 8002"
+    entrypoint: bash -c "sleep 50 && python app/init_database.py && uvicorn app.main:app --host 0.0.0.0 --port 8002"
     networks:
       - default
     ports:

@@ -10,4 +10,6 @@ export interface Flight {
 
 export interface GetFlightsArgs {
   flight_id?: string;
+  skip?: number;
+  limit?: number;
 }

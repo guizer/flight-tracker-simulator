@@ -10,6 +10,8 @@ import {
   DEFAULT_MAP_ZOOM_LEVEL,
   FLIGHT_ICON_SIZE,
   LOCATION_ICON_SIZE,
+  TILE_LAYER_ATTRIBUTION,
+  TILE_LAYER_URL,
 } from "../settings";
 import AirportPopupContent from "./AirportPopupContent";
 import FlightStatusPopupContent from "./FlightStatusPopContent";
@@ -19,7 +21,13 @@ import {
   FlightStatusByFlightId,
 } from "./type";
 
-const createFlightIcon = (heading: number) =>
+const AIRPORT_MARKER = new Icon({
+  iconUrl: "/location.png",
+  iconAnchor: [LOCATION_ICON_SIZE / 2, LOCATION_ICON_SIZE / 2],
+  iconSize: [LOCATION_ICON_SIZE, LOCATION_ICON_SIZE],
+});
+
+const createFlightIcon = (heading: number, origin: string) =>
   L.divIcon({
     iconSize: [FLIGHT_ICON_SIZE, FLIGHT_ICON_SIZE],
     iconAnchor: [FLIGHT_ICON_SIZE / 2, FLIGHT_ICON_SIZE / 2],
@@ -28,7 +36,7 @@ const createFlightIcon = (heading: number) =>
       style="transform: rotate(${heading}deg); background: transparent;"
       height="${FLIGHT_ICON_SIZE}" 
       width="${FLIGHT_ICON_SIZE}" 
-      src="/air_plane_black.png"
+      src="/${origin === "LFPG" ? "air_plane_green" : "air_plane_red"}.png"
     >`,
   });
 
@@ -86,7 +94,7 @@ const Map = () => {
 
   useEffect(() => {
     flightClient
-      .getFlights()
+      .getFlights({ limit: 6000 })
       .then((fetchedFlights) =>
         setFlights(
           fetchedFlights.reduce(
@@ -133,28 +141,21 @@ const Map = () => {
   }, [eventSource]);
   return (
     <div>
-      <div className="simulation-time">{currentSimulationTime}</div>
+      <div className="simulation-time">
+        {currentSimulationTime?.replace("T", " ")}
+      </div>
       <MapContainer
         center={DEFAULT_MAP_CENTER}
         zoom={DEFAULT_MAP_ZOOM_LEVEL}
         style={{ height: "100vh", width: "100%" }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <TileLayer attribution={TILE_LAYER_ATTRIBUTION} url={TILE_LAYER_URL} />
         {Object.values(airportsToDisplay).map((airport) => (
           <Marker
             key={airport.icao}
             position={[airport.latitude, airport.longitude]}
             zIndexOffset={1}
-            icon={
-              new Icon({
-                iconUrl: "/location.png",
-                iconAnchor: [LOCATION_ICON_SIZE / 2, LOCATION_ICON_SIZE / 2],
-                iconSize: [LOCATION_ICON_SIZE, LOCATION_ICON_SIZE],
-              })
-            }
+            icon={AIRPORT_MARKER}
           >
             <Popup minWidth={400} maxWidth={600}>
               {<AirportPopupContent airport={airport} />}
@@ -163,17 +164,20 @@ const Map = () => {
         ))}
         {Object.values(allFlightStatus)
           .filter((flightStatus) => flightStatus.alive === true)
-          .map((flightStatus) => (
-            <Marker
-              key={flightStatus.flightId}
-              position={[flightStatus.latitude, flightStatus.longitude]}
-              icon={createFlightIcon(flightStatus.heading)}
-              zIndexOffset={2}
-            >
-              <Popup minWidth={400} maxWidth={600}>
-                {flights[flightStatus.flightId] &&
-                airports[flights[flightStatus.flightId].origin] &&
-                airports[flights[flightStatus.flightId].destination] ? (
+          .map((flightStatus) =>
+            flights[flightStatus.flightId] &&
+            airports[flights[flightStatus.flightId].origin] &&
+            airports[flights[flightStatus.flightId].destination] ? (
+              <Marker
+                key={flightStatus.flightId}
+                position={[flightStatus.latitude, flightStatus.longitude]}
+                icon={createFlightIcon(
+                  flightStatus.heading,
+                  flights[flightStatus.flightId].origin
+                )}
+                zIndexOffset={2}
+              >
+                <Popup minWidth={400} maxWidth={600}>
                   <FlightStatusPopupContent
                     flightStatus={flightStatus}
                     flight={flights[flightStatus.flightId]}
@@ -182,10 +186,10 @@ const Map = () => {
                       airports[flights[flightStatus.flightId].destination]
                     }
                   />
-                ) : null}
-              </Popup>
-            </Marker>
-          ))}
+                </Popup>
+              </Marker>
+            ) : null
+          )}
       </MapContainer>
     </div>
   );
