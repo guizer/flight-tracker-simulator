@@ -1,11 +1,9 @@
-# flight-events-simulator
-Simulation of an application receiving real time flight position events and allowing to visualize the associated flights
-and their related information on a map.
+# flight-tracker-simulator
+Simulation of a flight tracking system consuming real time flight position events, handling aeronautical data in micro-services and displaying those data on a map.
 
 ## How it works
 
 - Flight position events are generated and published to a RabbitMQ instance by the event producer service.
-
 - Those position events are consumed by
   - The flight status service which
     1. Update the current position of the associated flight in its internal database.
