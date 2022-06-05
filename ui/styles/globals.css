@@ -11,7 +11,8 @@ body {
   border: 0;
 }
 
-.flight-position-popup span {
+.flight-status-popup span,
+.airport-popup span {
   text-align: right;
   float: right;
 }

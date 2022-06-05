@@ -1,20 +1,23 @@
-import L from "leaflet";
+import L, { Icon } from "leaflet";
 import { useEffect, useMemo, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import { createAirportClient } from "../airport/airportClient";
-import { Airport } from "../airport/type";
-import { createFlightStatusEventSource } from "../flightStatus";
-import { FlightStatus } from "../flightStatus/type";
+import { createAirportClient } from "../clients/airport/airportClient";
+import { createFlightClient } from "../clients/flight/flightClient";
+import { createFlightStatusEventSource } from "../clients/flightStatus";
+import { FlightStatus } from "../clients/flightStatus/type";
 import {
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM_LEVEL,
   FLIGHT_ICON_SIZE,
+  LOCATION_ICON_SIZE,
 } from "../settings";
+import AirportPopupContent from "./AirportPopupContent";
 import FlightStatusPopupContent from "./FlightStatusPopContent";
-
-type FlightStatusByFlightId = {
-  [flightId: string]: FlightStatus;
-};
+import {
+  AirportByIcao,
+  FlightByFlightId,
+  FlightStatusByFlightId,
+} from "./type";
 
 const createFlightIcon = (heading: number) =>
   L.divIcon({
@@ -30,30 +33,75 @@ const createFlightIcon = (heading: number) =>
   });
 
 const Map = () => {
-  const [airports, setAirports] = useState<Airport[]>([]);
-  const [flightStatus, setFlightStatus] = useState<FlightStatusByFlightId>({});
+  const [airports, setAirports] = useState<AirportByIcao>({});
+  const [allFlightStatus, setAllFlightStatus] =
+    useState<FlightStatusByFlightId>({});
+  const [flights, setFlights] = useState<FlightByFlightId>({});
   const airportClient = useMemo(() => createAirportClient(), []);
+  const flightClient = useMemo(() => createFlightClient(), []);
   const [eventSource, setEventSource] = useState<EventSource>();
   const currentSimulationTime = useMemo(
     () =>
-      Object.values(flightStatus)
+      Object.values(allFlightStatus)
         .sort(
           (statusA, statusB) =>
             new Date(statusB.time).getTime() - new Date(statusA.time).getTime()
         )
         .at(0)
         ?.time.toString(),
-    [flightStatus]
+    [allFlightStatus]
   );
+  const airportsToDisplay = useMemo(() => {
+    const originsToDisplay = Object.values(allFlightStatus)
+      .filter((status) => status.alive)
+      .map((status) => flights[status.flightId]?.origin);
+    const destinationsToDisplay = Object.values(allFlightStatus)
+      .filter((status) => status.alive)
+      .map((status) => flights[status.flightId]?.destination);
+    return Object.values(airports).filter(
+      (airport) =>
+        originsToDisplay.includes(airport.icao) ||
+        destinationsToDisplay.includes(airport.icao)
+    );
+  }, [airports, allFlightStatus, flights]);
 
   useEffect(() => {
     airportClient
       .getAirports()
-      .then(setAirports)
+      .then((fetchedAirports) =>
+        setAirports(
+          fetchedAirports.reduce(
+            (acc, airport) => ({
+              ...acc,
+              [airport.icao]: airport,
+            }),
+            {}
+          )
+        )
+      )
       .catch((error) => {
         console.log(error);
       });
   }, [airportClient]);
+
+  useEffect(() => {
+    flightClient
+      .getFlights()
+      .then((fetchedFlights) =>
+        setFlights(
+          fetchedFlights.reduce(
+            (acc, flight) => ({
+              ...acc,
+              [flight.flight_id]: flight,
+            }),
+            {}
+          )
+        )
+      )
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [flightClient]);
 
   useEffect(() => {
     setEventSource(createFlightStatusEventSource());
@@ -71,8 +119,8 @@ const Map = () => {
           }),
           {}
         );
-        setFlightStatus((previousStatuss) => ({
-          ...previousStatuss,
+        setAllFlightStatus((allPreviousStatus) => ({
+          ...allPreviousStatus,
           ...newStatus,
         }));
       };
@@ -95,16 +143,46 @@ const Map = () => {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {Object.values(flightStatus)
+        {Object.values(airportsToDisplay).map((airport) => (
+          <Marker
+            key={airport.icao}
+            position={[airport.latitude, airport.longitude]}
+            zIndexOffset={1}
+            icon={
+              new Icon({
+                iconUrl: "/location.png",
+                iconAnchor: [LOCATION_ICON_SIZE / 2, LOCATION_ICON_SIZE / 2],
+                iconSize: [LOCATION_ICON_SIZE, LOCATION_ICON_SIZE],
+              })
+            }
+          >
+            <Popup minWidth={400} maxWidth={600}>
+              {<AirportPopupContent airport={airport} />}
+            </Popup>
+          </Marker>
+        ))}
+        {Object.values(allFlightStatus)
           .filter((flightStatus) => flightStatus.alive === true)
           .map((flightStatus) => (
             <Marker
               key={flightStatus.flightId}
               position={[flightStatus.latitude, flightStatus.longitude]}
               icon={createFlightIcon(flightStatus.heading)}
+              zIndexOffset={2}
             >
-              <Popup minWidth={200}>
-                <FlightStatusPopupContent flightStatus={flightStatus} />
+              <Popup minWidth={400} maxWidth={600}>
+                {flights[flightStatus.flightId] &&
+                airports[flights[flightStatus.flightId].origin] &&
+                airports[flights[flightStatus.flightId].destination] ? (
+                  <FlightStatusPopupContent
+                    flightStatus={flightStatus}
+                    flight={flights[flightStatus.flightId]}
+                    origin={airports[flights[flightStatus.flightId].origin]}
+                    destination={
+                      airports[flights[flightStatus.flightId].destination]
+                    }
+                  />
+                ) : null}
               </Popup>
             </Marker>
           ))}

@@ -4,6 +4,10 @@ export const AIRPORT_SERVICE_URL = "http://localhost:8000";
 
 export const FLIGHT_STATUS_SERVICE_URL = "http://localhost:8001";
 
+export const FLIGHT_SERVICE_URL = "http://localhost:8002";
+
+export const LOCATION_ICON_SIZE = 24;
+
 export const FLIGHT_ICON_SIZE = 16;
 
 export const DEFAULT_MAP_ZOOM_LEVEL = 3;
