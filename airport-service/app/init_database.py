@@ -1,12 +1,19 @@
 import csv
 import gzip
+import logging
+from sqlite3 import ProgrammingError
 
 from app import models, settings
 from app.database import engine, SessionLocal
 
+logger = logging.getLogger(__name__)
+
 
 def init_database():
-    models.Base.metadata.drop_all(bind=engine)
+    try:
+        models.Base.metadata.drop_all(bind=engine)
+    except ProgrammingError as err:
+        logger.error(err)
     models.Base.metadata.create_all(bind=engine, checkfirst=False)
     with gzip.open(settings.INPUT_FLIGHT_FILE, "rt") as file:
         session = SessionLocal()

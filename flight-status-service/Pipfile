@@ -9,6 +9,7 @@ uvicorn = {extras = ["standard"], version = "==0.17"}
 sqlalchemy = "==1.4"
 aio-pika = "==8.0"
 sse-starlette = "==0.10"
+psycopg2-binary = "==2.9"
 
 [requires]
 python_version = "3.9"

@@ -9,16 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette import EventSourceResponse
 from starlette.requests import Request
 
-from app import models, crud, settings
+from app import crud, settings
 from app.consumer import consume_flight_event_messages
-from app.database import engine, SessionLocal
+from app.database import SessionLocal
 from app.dtos import FlightStatusDto
 
 logging.basicConfig(format=settings.LOGGING_FORMAT, level=logging.INFO)
 logger = logging.getLogger()
-
-models.Base.metadata.drop_all(bind=engine)
-models.Base.metadata.create_all(bind=engine, checkfirst=True)
 
 app = FastAPI()
 app.add_middleware(

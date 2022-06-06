@@ -7,7 +7,7 @@ class Flight(Base):
     __tablename__ = "flights"
 
     id = Column(Integer, primary_key=True, index=True)
-    flight_id = Column(Integer, unique=True, index=True)
+    flight_id = Column(String, unique=True, index=True)
     callsign = Column(String, nullable=False)
     aircraft = Column(String, nullable=False)
     airline = Column(String, nullable=False)
