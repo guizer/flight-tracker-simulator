@@ -31,6 +31,9 @@ def load_events():
         .drop_duplicates(["flight_id"])
     arrival_events["type"] = EventType.ARRIVAL.value
 
+    position_events = position_events.merge(arrival_events[["flight_id", "time"]].rename(columns={"time": "arrival_time"}), on=["flight_id"], how="inner")
+    position_events = position_events[position_events["time"] < position_events["arrival_time"]].drop(["arrival_time"], axis=1)
+
     all_events = pd.concat([position_events, arrival_events], axis=0)
     all_events = all_events[
         (all_events["time"] >= settings.START_TIMESTAMP) & (all_events["time"] <= settings.END_TIMESTAMP)]

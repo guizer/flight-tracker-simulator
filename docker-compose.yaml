@@ -11,7 +11,7 @@ services:
       RABBITMQ_URL: "rabbitmq"
       SPEED_FACTOR: "10"
       START_DATE: "2022-06-04 16:00:00"
-      END_DATE: "2022-06-04 22:00:00"
+      END_DATE: "2022-06-05 00:00:00"
     networks:
       - default
   airport-service:
@@ -32,6 +32,7 @@ services:
     entrypoint: bash -c "sleep 50 && uvicorn app.main:app --host 0.0.0.0 --port 8001"
     environment:
       RABBITMQ_URL: "rabbitmq"
+      STREAM_DELAY_IN_SECS: "1"
     networks:
       - default
     ports:
