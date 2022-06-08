@@ -4,7 +4,7 @@ ADD flight-status-service /flight-status-service
 
 WORKDIR /flight-status-service
 
-RUN pip install pipenv && pipenv sync --system
+RUN apt-get update && apt-get install curl -y && pip install pipenv && pipenv sync --system
 
 ENV PYTHONPATH=/flight-status-service
 

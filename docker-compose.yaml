@@ -4,12 +4,13 @@ services:
     build:
       context: .
       dockerfile: event-producer/Dockerfile
-    depends_on:
-      - "rabbitmq"
-    entrypoint: bash -c "sleep 50 && python app/main.py"
+    entrypoint: bash -c "
+        while ! curl -s rabbitmq:15672 > /dev/null; do echo waiting for rabbitmq; sleep 3; done;
+        python app/main.py
+      "
     environment:
       RABBITMQ_URL: "rabbitmq"
-      SPEED_FACTOR: "10"
+      SPEED_FACTOR: "5"
       START_DATE: "2022-06-04 16:00:00"
       END_DATE: "2022-06-05 00:00:00"
     networks:
@@ -18,7 +19,10 @@ services:
     build:
       context: .
       dockerfile: ./airport-service/Dockerfile
-    entrypoint: bash -c "sleep 50 && python app/init_database.py && uvicorn app.main:app --host 0.0.0.0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: bash -c "python app/init_database.py && uvicorn app.main:app --host 0.0.0.0"
     environment:
       SQLALCHEMY_DATABASE_URL: "postgresql+psycopg2://postgres:postgres@postgres/postgres"
     networks:
@@ -30,8 +34,12 @@ services:
       context: .
       dockerfile: flight-status-service/Dockerfile
     depends_on:
-      - "rabbitmq"
-    entrypoint: bash -c "sleep 50 && python app/init_database.py && uvicorn app.main:app --host 0.0.0.0 --port 8001"
+      postgres:
+        condition: service_healthy
+    entrypoint: bash -c "
+        while ! curl -s rabbitmq:15672 > /dev/null; do echo waiting for rabbitmq; sleep 3; done; 
+        python app/init_database.py && uvicorn app.main:app --host 0.0.0.0 --port 8001
+      "
     environment:
       RABBITMQ_URL: "rabbitmq"
       STREAM_DELAY_IN_SECS: "1"
@@ -44,7 +52,13 @@ services:
     build:
       context: .
       dockerfile: ./flight-service/Dockerfile
-    entrypoint: bash -c "sleep 50 && python app/init_database.py && uvicorn app.main:app --host 0.0.0.0 --port 8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: bash -c "
+        while !</dev/tcp/postgres/5432; do echo waiting for postgres; sleep 3; done;
+        python app/init_database.py && uvicorn app.main:app --host 0.0.0.0 --port 8002
+      "
     environment:
       SQLALCHEMY_DATABASE_URL: "postgresql+psycopg2://postgres:postgres@postgres/postgres"
     networks:
@@ -53,6 +67,11 @@ services:
       - "8002:8002"
   rabbitmq:
     image: rabbitmq:3-management
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 10
     hostname: rabbitmq
     networks:
       - default
@@ -64,12 +83,21 @@ services:
     hostname: postgres
     environment:
       POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - default
   ui:
     build:
       context: .
       dockerfile: ui/Dockerfile
+    depends_on:
+      - "airport-service"
+      - "flight-service"
+      - "flight-status-service"
     networks:
       - default
     ports:

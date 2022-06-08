@@ -5,7 +5,7 @@ ADD event-producer /event-producer
 
 WORKDIR /event-producer
 
-RUN pip install pipenv && pipenv sync --system
+RUN apt-get update && apt-get install curl -y && pip install pipenv && pipenv sync --system
 
 ENV PYTHONPATH=/event-producer
 
