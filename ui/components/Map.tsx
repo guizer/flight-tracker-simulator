@@ -27,7 +27,20 @@ const AIRPORT_MARKER = new Icon({
   iconSize: [LOCATION_ICON_SIZE, LOCATION_ICON_SIZE],
 });
 
-const createFlightIcon = (heading: number, origin: string) =>
+const computeAirCraftImageColor = (origin: string, destination: string) => {
+  if (origin.substring(0, 2) === "LF" && destination.substring(0, 2) == "LF") {
+    return "orange";
+  } else if (origin.substring(0, 2) === "LF") {
+    return "green";
+  }
+  return "red";
+};
+
+const createFlightIcon = (
+  heading: number,
+  origin: string,
+  destination: string
+) =>
   L.divIcon({
     iconSize: [FLIGHT_ICON_SIZE, FLIGHT_ICON_SIZE],
     iconAnchor: [FLIGHT_ICON_SIZE / 2, FLIGHT_ICON_SIZE / 2],
@@ -36,7 +49,7 @@ const createFlightIcon = (heading: number, origin: string) =>
       style="transform: rotate(${heading}deg); background: transparent;"
       height="${FLIGHT_ICON_SIZE}" 
       width="${FLIGHT_ICON_SIZE}" 
-      src="/${origin === "LFPG" ? "air_plane_green" : "air_plane_red"}.png"
+      src="/air_plane_${computeAirCraftImageColor(origin, destination)}.png"
     >`,
   });
 
@@ -173,7 +186,8 @@ const Map = () => {
                 position={[flightStatus.latitude, flightStatus.longitude]}
                 icon={createFlightIcon(
                   flightStatus.heading,
-                  flights[flightStatus.flightId].origin
+                  flights[flightStatus.flightId].origin,
+                  flights[flightStatus.flightId].destination
                 )}
                 zIndexOffset={2}
               >

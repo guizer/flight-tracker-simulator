@@ -10,9 +10,9 @@ services:
       "
     environment:
       RABBITMQ_URL: "rabbitmq"
-      SPEED_FACTOR: "5"
-      START_DATE: "2022-06-04 16:00:00"
-      END_DATE: "2022-06-05 00:00:00"
+      SPEED_FACTOR: "3"
+      START_DATE: "2022-06-10 15:00:00"
+      END_DATE: "2022-06-10 23:00:00"
     networks:
       - default
   airport-service:
@@ -42,7 +42,7 @@ services:
       "
     environment:
       RABBITMQ_URL: "rabbitmq"
-      STREAM_DELAY_IN_SECS: "1"
+      STREAM_DELAY_IN_SECS: "0.1"
       SQLALCHEMY_DATABASE_URL: "postgresql+psycopg2://postgres:postgres@postgres/postgres"
     networks:
       - default

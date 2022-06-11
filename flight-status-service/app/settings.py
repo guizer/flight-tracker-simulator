@@ -9,4 +9,4 @@ FLIGHT_EVENTS_QUEUE_NAME = "flight-events"
 
 LOGGING_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-STREAM_DELAY_IN_SECS = int(os.getenv("STREAM_DELAY_IN_SECS", 3))
+STREAM_DELAY_IN_SECS = float(os.getenv("STREAM_DELAY_IN_SECS", 3))
