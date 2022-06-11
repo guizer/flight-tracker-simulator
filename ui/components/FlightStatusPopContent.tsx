@@ -16,7 +16,7 @@ const FlightStatusPopupContent = ({
   <div className="flight-status-popup">
     <div>
       <b>Flight number:</b>
-      <span>{flightStatus.flightId.split("/")[0]}</span>
+      <span>{flight.number}</span>
     </div>
     <div>
       <b>Callsign:</b>

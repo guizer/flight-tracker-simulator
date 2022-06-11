@@ -65,7 +65,7 @@ def process_events(events: List[dict]):
                         if current_event["type"] == EventType.ARRIVAL.value:
                             body = {key: value for key, value in current_event.items() if
                                     type(value) is not float or not math.isnan(value)}
-                        logger.info("Sending event %d: %s", sent_events_counter, body)
+                        logger.debug("Sending event %d: %s", sent_events_counter, body)
                         body = json.dumps(body).encode(settings.ENCODING)
                         channel.basic_publish(exchange="",
                                               routing_key=settings.FLIGHT_EVENTS_QUEUE_NAME,
